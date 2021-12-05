@@ -2160,6 +2160,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var _components_Nav__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/Nav */ "./src/components/Nav.js");
 /* harmony import */ var _components_Body__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/Body */ "./src/components/Body.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_3__);
+
 
 
 
@@ -2167,25 +2170,68 @@ class App extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
   constructor() {
     super();
     this.state = {
-      selectedCategory: 'popular'
+      selectedCategory: 'popular',
+      posts: [],
+      saved: [],
+      showSaved: false
     };
   }
 
-  changeCategory = category => {
+  async componentDidMount() {
+    const {
+      children
+    } = (await axios__WEBPACK_IMPORTED_MODULE_3___default().get(`/${this.state.selectedCategory}`)).data;
+    const savedPosts = (await axios__WEBPACK_IMPORTED_MODULE_3___default().get('/saved')).data;
     this.setState({
-      selectedCategory: category
+      posts: children,
+      saved: savedPosts
     });
+  }
+
+  changeCategory = async category => {
+    this.setState({
+      posts: []
+    });
+    const {
+      children
+    } = (await axios__WEBPACK_IMPORTED_MODULE_3___default().get(`/${category}`)).data;
+    this.setState({
+      selectedCategory: category,
+      posts: children
+    });
+  };
+  toggleShowSaved = () => {
+    this.setState({
+      showSaved: !this.state.showSaved
+    });
+  };
+  savePost = async details => {
+    const newSavedPost = (await axios__WEBPACK_IMPORTED_MODULE_3___default().post('./create', {
+      details
+    })).data;
+    this.setState({
+      saved: [...this.state.saved, newSavedPost]
+    });
+    alert('You did it!!');
   };
 
   render() {
     const {
-      selectedCategory
+      selectedCategory,
+      posts,
+      showSaved,
+      saved
     } = this.state;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(_components_Nav__WEBPACK_IMPORTED_MODULE_1__["default"], {
       selectedCategory: selectedCategory,
       changeCategory: this.changeCategory
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(_components_Body__WEBPACK_IMPORTED_MODULE_2__["default"], {
-      selectedCategory: selectedCategory
+      selectedCategory: selectedCategory,
+      posts: posts,
+      saved: saved,
+      showSaved: showSaved,
+      toggleShowSaved: this.toggleShowSaved,
+      savePost: this.savePost
     }));
   }
 
@@ -2205,35 +2251,37 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _Post__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Post */ "./src/components/Post.js");
+/* harmony import */ var _SavedPosts__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./SavedPosts */ "./src/components/SavedPosts.js");
 
 
 
-class Body extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      posts: []
-    };
-  }
 
-  async componentDidMount() {
-    const {
-      children
-    } = (await axios__WEBPACK_IMPORTED_MODULE_1___default().get('/posts')).data;
-    this.setState({
-      posts: children
+const Body = ({
+  posts,
+  saved,
+  selectedCategory,
+  showSaved,
+  toggleShowSaved,
+  savePost
+}) => {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("button", {
+    onClick: toggleShowSaved
+  }, showSaved ? 'Go back to Main Posts...' : 'Go to Saved Posts...'), showSaved ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(_SavedPosts__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    saved: saved
+  }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("h2", {
+    className: "centerItem"
+  }, selectedCategory), posts[0] ? posts.map(post => {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Post__WEBPACK_IMPORTED_MODULE_1__["default"], {
+      key: post.data.id,
+      details: post.data,
+      savePost: savePost,
+      saved: saved
     });
-  }
-
-  render() {
-    console.log('MY POSTS!! ', this.state.posts);
-    const category = this.props.selectedCategory;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, category);
-  }
-
-}
+  }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+    className: "centerItem"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("h3", null, "Loading..."))));
+};
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Body);
 
@@ -2258,19 +2306,19 @@ class Nav extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
     this.state = {
       categories: [{
         id: 0,
-        name: 'popular'
+        name: "popular"
       }, {
         id: 1,
-        name: 'minecraft'
+        name: "minecraft"
       }, {
         id: 2,
-        name: 'wellthatsucks'
+        name: "wellthatsucks"
       }, {
         id: 3,
-        name: 'memes'
+        name: "memes"
       }, {
         id: 4,
-        name: 'pcmasterrace'
+        name: "pcmasterrace"
       }]
     };
   }
@@ -2279,10 +2327,26 @@ class Nav extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
     const {
       categories
     } = this.state;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("nav", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("h2", null, "Welcome to our Reddit App"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+    const {
+      selectedCategory
+    } = this.props;
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("nav", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+      className: "flexSpace"
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("img", {
+      style: {
+        height: "3rem"
+      },
+      src: "https://www.logo.wine/a/logo/Reddit/Reddit-Vertical-Complete-White-Dark-Background-Logo.wine.svg"
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("h2", null, "Welcome to our Reddit App"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("img", {
+      style: {
+        height: "3rem"
+      },
+      src: "https://www.logo.wine/a/logo/Reddit/Reddit-Vertical-Complete-White-Dark-Background-Logo.wine.svg"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
       className: "links"
     }, categories.map(category => {
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+        className: category.name === selectedCategory ? "selected" : "",
         key: `${category.id}`,
         onClick: () => this.props.changeCategory(category.name)
       }, category.name);
@@ -2290,6 +2354,98 @@ class Nav extends react__WEBPACK_IMPORTED_MODULE_0__.Component {
   }
 
 }
+
+/***/ }),
+
+/***/ "./src/components/Post.js":
+/*!********************************!*\
+  !*** ./src/components/Post.js ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+
+const Post = props => {
+  let title, thumbnail, permalink, ups, id;
+  {
+    props.details ? ({
+      title,
+      thumbnail,
+      permalink,
+      ups,
+      id
+    } = props.details) : "";
+  }
+  const {
+    savePost,
+    saved
+  } = props;
+  const savedIds = saved.map(post => post.id);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("img", {
+    src: thumbnail === "self" || thumbnail === "default" ? "" : `${thumbnail}`
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("a", {
+    className: "link",
+    href: "https://www.reddit.com" + `${permalink}`,
+    target: "_blank"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("h3", null, title)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+    className: "flexSpace"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("small", null, "Upvotes: ", `${ups}`), savedIds.includes(id) ? "" : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", {
+    style: {
+      textDecoration: "underline"
+    },
+    onClick: () => savePost({
+      title,
+      thumbnail,
+      permalink,
+      ups,
+      id
+    })
+  }, "Save for Later")));
+};
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Post);
+
+/***/ }),
+
+/***/ "./src/components/SavedPosts.js":
+/*!**************************************!*\
+  !*** ./src/components/SavedPosts.js ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var _Post__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Post */ "./src/components/Post.js");
+
+
+
+const SavedPosts = ({
+  saved
+}) => {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement("h2", {
+    className: "centerItem"
+  }, "Saved Posts"), saved.map(post => {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Post__WEBPACK_IMPORTED_MODULE_1__["default"], {
+      key: post.id,
+      details: post,
+      saved: saved
+    });
+  }));
+};
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SavedPosts);
 
 /***/ }),
 

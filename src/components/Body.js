@@ -1,30 +1,36 @@
-import React, {Component} from 'react'
-import axios from 'axios'
+import React, { Component } from "react";
+import Post from "./Post";
+import SavedPosts from "./SavedPosts";
 
-class Body extends Component {
-    constructor(props){
-        super(props)
-        this.state = {
-            posts: []
-        }
-    }
-
-    async componentDidMount() {
-        const {children} = (await axios.get('/posts')).data
-        this.setState({
-            posts: children
-        })
-    }
-
-    render(){
-        console.log('MY POSTS!! ', this.state.posts)
-        const category = this.props.selectedCategory
-        return(
-            <div>
-                {category}
+const Body = ({ posts, saved, selectedCategory, showSaved, toggleShowSaved, savePost }) => {
+    return (
+    <div>
+      <button onClick={toggleShowSaved}>
+          {showSaved ? 'Go back to Main Posts...':'Go to Saved Posts...'}
+      </button>
+      {showSaved ? (
+        <SavedPosts saved = {saved} />
+      ) : (
+        <div>
+          <h2 className="centerItem">{selectedCategory}</h2>
+          {posts[0] ? (
+            posts.map((post) => {
+              return <Post 
+              key={post.data.id} 
+              details={post.data}
+              savePost = {savePost} 
+              saved = {saved}
+              />;
+            })
+          ) : (
+            <div className="centerItem">
+              <h3>Loading...</h3>
             </div>
-        )
-    }
-}
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
-export default Body
+export default Body;
